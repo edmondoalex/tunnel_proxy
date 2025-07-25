@@ -2,7 +2,7 @@
   "domain": "tunnel_proxy",
   "name": "Tunnel Proxy",
   "version": "1.0.0",
-  "documentation": "",
+  "documentation": "https://www.example.com",
   "platforms": ["sensor"],
   "dependencies": [],
   "codeowners": [],
