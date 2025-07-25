@@ -1,6 +1,6 @@
 {
   "name": "Tunnel Proxy",
-  "content_in_root": true,
+  "content_in_root": false,
   "domain": "tunnel_proxy",
   "country": "IT",
   "homeassistant": "2023.0.0",
