@@ -1,0 +1,10 @@
+{
+  "name": "Tunnel Proxy",
+  "content_in_root": true,
+  "domain": "tunnel_proxy",
+  "country": "IT",
+  "homeassistant": "2023.0.0",
+  "render_readme": true,
+  "filename": "logo.png"
+}
+
