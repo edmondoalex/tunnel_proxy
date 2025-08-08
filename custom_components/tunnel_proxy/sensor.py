@@ -1,3 +1,5 @@
+# custom_components/tunnel_proxy/sensor.py
+
 from homeassistant.helpers.entity import Entity
 import json
 import os

@@ -1,3 +1,5 @@
+# custom_components/tunnel_proxy/utils.py
+
 import json
 import subprocess
 import os
@@ -10,7 +12,7 @@ def start_tcp_tunnel(remote_port, target_ip, target_port):
     ])
 
 def save_tunnel_info(hass, tunnel_data):
-    path = hass.config.path("active_tunnels.json")
+    path = hass.config.path("tunnels.json")
     try:
         if os.path.exists(path):
             with open(path, "r") as f:
