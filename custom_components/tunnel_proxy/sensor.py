@@ -111,6 +111,7 @@ class TunnelTokenSensor(TunnelBaseSensor):
             "integration_version": self._version,
             "connected_devices_count": 0,
             "connected_devices": [],
+            "token_full": None,
         }
 
     @property
@@ -155,6 +156,7 @@ class TunnelTokenSensor(TunnelBaseSensor):
                 "integration_version": self._version,
                 "connected_devices_count": len(connected),
                 "connected_devices": connected,
+                "token_full": token if token else None,
             }
         except Exception as e:
             _LOGGER.error(f"Errore caricando token: {e}")
@@ -163,6 +165,7 @@ class TunnelTokenSensor(TunnelBaseSensor):
                 "integration_version": self._version,
                 "connected_devices_count": 0,
                 "connected_devices": [],
+                "token_full": None,
             }
 
 
@@ -200,7 +203,12 @@ class TunnelConnectedListSensor(TunnelBaseSensor):
     def __init__(self, token_path, tunnels_path, name, url, version):
         super().__init__(token_path, tunnels_path, name, url, version)
         self._state = "none"
-        self._attributes = {"connected_devices": []}
+        self._attributes = {
+            "connected_devices": [],
+            "connected_ips": [],
+            "connected_ips_csv": "",
+            "connected_ips_multiline": "",
+        }
 
     @property
     def unique_id(self):
@@ -227,16 +235,31 @@ class TunnelConnectedListSensor(TunnelBaseSensor):
             connected = await self.hass.async_add_executor_job(_load_tunnels, self._tunnels_path)
             if not connected:
                 self._state = "none"
-                self._attributes = {"connected_devices": []}
+                self._attributes = {
+                    "connected_devices": [],
+                    "connected_ips": [],
+                    "connected_ips_csv": "",
+                    "connected_ips_multiline": "",
+                }
                 return
 
             ips = [d.get("target_ip") for d in connected if d.get("target_ip")]
-            self._state = ", ".join(ips) if ips else "none"
-            self._attributes = {"connected_devices": connected}
+            self._state = f"{len(ips)} dispositivi" if ips else "none"
+            self._attributes = {
+                "connected_devices": connected,
+                "connected_ips": ips,
+                "connected_ips_csv": ", ".join(ips),
+                "connected_ips_multiline": "\n".join(ips),
+            }
         except Exception as e:
             _LOGGER.error(f"Errore caricando lista dispositivi connessi: {e}")
             self._state = "none"
-            self._attributes = {"connected_devices": []}
+            self._attributes = {
+                "connected_devices": [],
+                "connected_ips": [],
+                "connected_ips_csv": "",
+                "connected_ips_multiline": "",
+            }
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
