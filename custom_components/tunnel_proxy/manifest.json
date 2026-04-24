@@ -2,7 +2,7 @@
   "domain": "tunnel_proxy",
   "name": "Tunnel Proxy",
   "version": "2.0.0",
-  "documentation": "",
+  "documentation": "https://github.com/edmondoalex/tunnel_proxy/blob/main/readme.md",
   "platforms": ["sensor"],
   "dependencies": [],
   "codeowners": [],
