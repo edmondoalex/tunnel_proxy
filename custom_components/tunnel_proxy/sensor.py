@@ -49,7 +49,7 @@ class TunnelTokenSensor(Entity):
         self._token_path = token_path
         self._name = name
         self._url = url
-        self._state = None
+        self._state = "not_available"
 
     @property
     def unique_id(self):
@@ -74,12 +74,13 @@ class TunnelTokenSensor(Entity):
 
     async def async_update(self):
         try:
-            self._state = await self.hass.async_add_executor_job(
+            token = await self.hass.async_add_executor_job(
                 _load_sensor_token,
                 self._token_path,
                 self._name,
                 self._url,
             )
+            self._state = token if token else "not_available"
         except Exception as e:
             _LOGGER.error(f"Errore caricando token: {e}")
-            self._state = None
+            self._state = "not_available"

@@ -13,7 +13,7 @@ async def async_generate_token_and_notify(hass, name, url, device_id):
     if existing:
         return
     token = secrets.token_urlsafe(32)
-    await hass.async_add_executor_job(save_token, token_path, token)
+    await hass.async_add_executor_job(save_token, token_path, token, name, url)
     await hass.async_add_executor_job(send_token, url, token, device_id)
 
 def get_existing_token(token_path):
@@ -32,19 +32,24 @@ def get_existing_token(token_path):
         _LOGGER.warning(f"Errore leggendo file token: {e}")
     return None
 
-def save_token(token_path, token):
+def save_token(token_path, token, name=None, url=None):
     """Salva un token in server_tokens.json"""
     tokens = []
     try:
         if os.path.exists(token_path):
-            with open(token_path, "r") as f:
+            with open(token_path, "r", encoding="utf-8") as f:
                 tokens = json.load(f)
     except Exception:
         tokens = []
 
     if token not in [t.get("token") for t in tokens]:
-        tokens.append({"token": token})
-        with open(token_path, "w") as f:
+        token_entry = {"token": token}
+        if name is not None:
+            token_entry["name"] = name
+        if url is not None:
+            token_entry["url"] = url
+        tokens.append(token_entry)
+        with open(token_path, "w", encoding="utf-8") as f:
             json.dump(tokens, f, indent=2)
         _LOGGER.info("Token salvato.")
 
