@@ -2,6 +2,7 @@
 
 import json
 import logging
+import os
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)

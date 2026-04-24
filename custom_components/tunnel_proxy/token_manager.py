@@ -3,6 +3,7 @@ import os
 import secrets
 import logging
 import requests
+from requests import exceptions as req_exc
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,5 +59,9 @@ def send_token(url, token, device_id):
             _LOGGER.info("Token inviato con successo")
         else:
             _LOGGER.error(f"Errore dal server {url}: {response.status_code}")
+    except req_exc.Timeout:
+        _LOGGER.warning(f"Timeout durante invio token verso {url}")
+    except req_exc.RequestException as e:
+        _LOGGER.warning(f"Errore rete durante invio token verso {url}: {e}")
     except Exception as e:
-        _LOGGER.error(f"Errore durante invio token: {e}")
+        _LOGGER.error(f"Errore inatteso durante invio token: {e}")
