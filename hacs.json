@@ -4,8 +4,7 @@
   "domain": "tunnel_proxy",
   "country": "IT",
   "homeassistant": "2023.0.0",
-  "render_readme": true,
-  "filename": "icon.png"
+  "render_readme": true
 }
 
 
