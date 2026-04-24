@@ -3,7 +3,7 @@
 import json
 import logging
 import os
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityCategory
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "tunnel_proxy"
@@ -89,6 +89,10 @@ class TunnelBaseSensor(Entity):
         self._version = version
 
     @property
+    def has_entity_name(self):
+        return False
+
+    @property
     def device_info(self):
         return {
             "identifiers": {(DOMAIN, f"{self._name}_{self._url}")},
@@ -115,7 +119,19 @@ class TunnelTokenSensor(TunnelBaseSensor):
 
     @property
     def name(self):
-        return f"Tunnel Token {self._name}"
+        return "Token"
+
+    @property
+    def icon(self):
+        return "mdi:key-variant"
+
+    @property
+    def entity_category(self):
+        return EntityCategory.DIAGNOSTIC
+
+    @property
+    def entity_registry_enabled_default(self):
+        return False
 
     @property
     def state(self):
@@ -161,7 +177,11 @@ class TunnelConnectedCountSensor(TunnelBaseSensor):
 
     @property
     def name(self):
-        return f"Tunnel Connected Devices {self._name}"
+        return "Connessi"
+
+    @property
+    def icon(self):
+        return "mdi:lan-connect"
 
     @property
     def state(self):
@@ -188,7 +208,11 @@ class TunnelConnectedListSensor(TunnelBaseSensor):
 
     @property
     def name(self):
-        return f"Tunnel Connected List {self._name}"
+        return "Dispositivi"
+
+    @property
+    def icon(self):
+        return "mdi:format-list-bulleted-square"
 
     @property
     def state(self):
