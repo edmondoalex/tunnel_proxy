@@ -1,12 +1,38 @@
 # custom_components/tunnel_proxy/sensor.py
 
-from homeassistant.helpers.entity import Entity
 import json
-import os
 import logging
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "tunnel_proxy"
+
+
+def _load_sensor_token(token_path, entry_name, entry_url):
+    if not os.path.exists(token_path):
+        return None
+    try:
+        with open(token_path, "r", encoding="utf-8") as f:
+            tokens = json.load(f)
+    except Exception:
+        return None
+
+    if not isinstance(tokens, list):
+        return None
+
+    for item in tokens:
+        if not isinstance(item, dict):
+            continue
+        if item.get("name") == entry_name and item.get("url") == entry_url:
+            return item.get("token")
+
+    # Retrocompatibilita: vecchio formato [{"token": "..."}]
+    for item in tokens:
+        if isinstance(item, dict) and item.get("token"):
+            return item.get("token")
+
+    return None
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     token_path = hass.config.path("server_tokens.json")
@@ -15,6 +41,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     entity = TunnelTokenSensor(token_path, name, url)
     async_add_entities([entity], update_before_add=True)
+
 
 class TunnelTokenSensor(Entity):
     def __init__(self, token_path, name, url):
@@ -46,17 +73,12 @@ class TunnelTokenSensor(Entity):
 
     async def async_update(self):
         try:
-            if not os.path.exists(self._token_path):
-                _LOGGER.warning(f"File token {self._token_path} non trovato")
-                self._state = None
-                return
-            with open(self._token_path, "r") as f:
-                tokens = json.load(f)
-            for item in tokens:
-                if item["name"] == self._name and item["url"] == self._url:
-                    self._state = item["token"]
-                    return
-            self._state = None
+            self._state = await self.hass.async_add_executor_job(
+                _load_sensor_token,
+                self._token_path,
+                self._name,
+                self._url,
+            )
         except Exception as e:
             _LOGGER.error(f"Errore caricando token: {e}")
             self._state = None
