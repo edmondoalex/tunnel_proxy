@@ -132,7 +132,7 @@ class TunnelTokenSensor(TunnelBaseSensor):
 
     @property
     def entity_registry_enabled_default(self):
-        return False
+        return True
 
     @property
     def state(self):
@@ -288,6 +288,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     version = await hass.async_add_executor_job(_load_integration_version)
 
     entities = [
+        TunnelTokenSensor(token_path, tunnels_path, name, url, version),
         TunnelConnectedCountSensor(token_path, tunnels_path, name, url, version),
         TunnelConnectedListSensor(token_path, tunnels_path, name, url, version),
     ]
