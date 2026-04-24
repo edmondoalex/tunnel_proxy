@@ -7,7 +7,7 @@ Integrazione custom per Home Assistant che espone endpoint API per:
 
 ## Versione
 
-Versione corrente componente: **2.0.8**
+Versione corrente componente: **2.0.9**
 
 ## Funzionalita principali
 
@@ -27,7 +27,7 @@ Versione corrente componente: **2.0.8**
 3. Installa `Tunnel Proxy` e riavvia Home Assistant.
 4. Aggiungi l'integrazione da `Impostazioni -> Dispositivi e servizi`.
 
-## Note 2.0.8
+## Note 2.0.9
 
 - Rimosse chiamate file bloccanti dal loop async nelle view.
 - Lettura tunnel di bootstrap resa async-safe tramite executor.
@@ -38,6 +38,7 @@ Versione corrente componente: **2.0.8**
 - Aggiunti sensori dedicati ai tunnel connessi visibili nella pagina dispositivo.
 - Nomi entita accorciati per migliorare leggibilita nella card dispositivo.
 - Aggiunti brand assets locali (`brand/icon.png`, `brand/logo.png`) per mostrare il logo nell'integrazione.
+
 
 
 
