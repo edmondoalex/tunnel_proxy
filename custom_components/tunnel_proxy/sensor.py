@@ -173,6 +173,7 @@ class TunnelConnectedCountSensor(TunnelBaseSensor):
     def __init__(self, token_path, tunnels_path, name, url, version):
         super().__init__(token_path, tunnels_path, name, url, version)
         self._state = 0
+        self._attributes = {"token_full": None}
 
     @property
     def unique_id(self):
@@ -190,13 +191,25 @@ class TunnelConnectedCountSensor(TunnelBaseSensor):
     def state(self):
         return self._state
 
+    @property
+    def extra_state_attributes(self):
+        return self._attributes
+
     async def async_update(self):
         try:
-            connected = await self.hass.async_add_executor_job(_load_tunnels, self._tunnels_path)
+            token, connected = await self.hass.async_add_executor_job(
+                _load_sensor_payload,
+                self._token_path,
+                self._tunnels_path,
+                self._name,
+                self._url,
+            )
             self._state = len(connected)
+            self._attributes = {"token_full": token if token else None}
         except Exception as e:
             _LOGGER.error(f"Errore caricando numero dispositivi connessi: {e}")
             self._state = 0
+            self._attributes = {"token_full": None}
 
 
 class TunnelConnectedListSensor(TunnelBaseSensor):
@@ -244,7 +257,12 @@ class TunnelConnectedListSensor(TunnelBaseSensor):
                 return
 
             ips = [d.get("target_ip") for d in connected if d.get("target_ip")]
-            self._state = f"{len(ips)} dispositivi" if ips else "none"
+            if not ips:
+                self._state = "none"
+            elif len(ips) <= 3:
+                self._state = ", ".join(ips)
+            else:
+                self._state = f"{', '.join(ips[:3])} (+{len(ips) - 3})"
             self._attributes = {
                 "connected_devices": connected,
                 "connected_ips": ips,
@@ -270,7 +288,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
     version = await hass.async_add_executor_job(_load_integration_version)
 
     entities = [
-        TunnelTokenSensor(token_path, tunnels_path, name, url, version),
         TunnelConnectedCountSensor(token_path, tunnels_path, name, url, version),
         TunnelConnectedListSensor(token_path, tunnels_path, name, url, version),
     ]
