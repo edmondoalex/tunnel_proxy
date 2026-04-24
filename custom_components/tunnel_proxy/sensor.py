@@ -80,34 +80,13 @@ def _load_sensor_payload(token_path, tunnels_path, entry_name, entry_url):
     return token, connected
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    token_path = hass.config.path("server_tokens.json")
-    tunnels_path = hass.config.path("tunnels.json")
-    name = entry.data["name"]
-    url = entry.data["url"]
-    version = await hass.async_add_executor_job(_load_integration_version)
-
-    entity = TunnelTokenSensor(token_path, tunnels_path, name, url, version)
-    async_add_entities([entity], update_before_add=True)
-
-
-class TunnelTokenSensor(Entity):
+class TunnelBaseSensor(Entity):
     def __init__(self, token_path, tunnels_path, name, url, version):
         self._token_path = token_path
         self._tunnels_path = tunnels_path
         self._name = name
         self._url = url
         self._version = version
-        self._state = "not_available"
-        self._attributes = {
-            "integration_version": self._version,
-            "connected_devices_count": 0,
-            "connected_devices": [],
-        }
-
-    @property
-    def unique_id(self):
-        return f"tunnel_token_{self._name}_{self._url}"
 
     @property
     def device_info(self):
@@ -118,6 +97,21 @@ class TunnelTokenSensor(Entity):
             "model": "Tunnel Token",
             "sw_version": self._version,
         }
+
+
+class TunnelTokenSensor(TunnelBaseSensor):
+    def __init__(self, token_path, tunnels_path, name, url, version):
+        super().__init__(token_path, tunnels_path, name, url, version)
+        self._state = "not_available"
+        self._attributes = {
+            "integration_version": self._version,
+            "connected_devices_count": 0,
+            "connected_devices": [],
+        }
+
+    @property
+    def unique_id(self):
+        return f"tunnel_token_{self._name}_{self._url}"
 
     @property
     def name(self):
@@ -154,3 +148,83 @@ class TunnelTokenSensor(Entity):
                 "connected_devices_count": 0,
                 "connected_devices": [],
             }
+
+
+class TunnelConnectedCountSensor(TunnelBaseSensor):
+    def __init__(self, token_path, tunnels_path, name, url, version):
+        super().__init__(token_path, tunnels_path, name, url, version)
+        self._state = 0
+
+    @property
+    def unique_id(self):
+        return f"tunnel_connected_count_{self._name}_{self._url}"
+
+    @property
+    def name(self):
+        return f"Tunnel Connected Devices {self._name}"
+
+    @property
+    def state(self):
+        return self._state
+
+    async def async_update(self):
+        try:
+            connected = await self.hass.async_add_executor_job(_load_tunnels, self._tunnels_path)
+            self._state = len(connected)
+        except Exception as e:
+            _LOGGER.error(f"Errore caricando numero dispositivi connessi: {e}")
+            self._state = 0
+
+
+class TunnelConnectedListSensor(TunnelBaseSensor):
+    def __init__(self, token_path, tunnels_path, name, url, version):
+        super().__init__(token_path, tunnels_path, name, url, version)
+        self._state = "none"
+        self._attributes = {"connected_devices": []}
+
+    @property
+    def unique_id(self):
+        return f"tunnel_connected_list_{self._name}_{self._url}"
+
+    @property
+    def name(self):
+        return f"Tunnel Connected List {self._name}"
+
+    @property
+    def state(self):
+        return self._state
+
+    @property
+    def extra_state_attributes(self):
+        return self._attributes
+
+    async def async_update(self):
+        try:
+            connected = await self.hass.async_add_executor_job(_load_tunnels, self._tunnels_path)
+            if not connected:
+                self._state = "none"
+                self._attributes = {"connected_devices": []}
+                return
+
+            ips = [d.get("target_ip") for d in connected if d.get("target_ip")]
+            self._state = ", ".join(ips) if ips else "none"
+            self._attributes = {"connected_devices": connected}
+        except Exception as e:
+            _LOGGER.error(f"Errore caricando lista dispositivi connessi: {e}")
+            self._state = "none"
+            self._attributes = {"connected_devices": []}
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    token_path = hass.config.path("server_tokens.json")
+    tunnels_path = hass.config.path("tunnels.json")
+    name = entry.data["name"]
+    url = entry.data["url"]
+    version = await hass.async_add_executor_job(_load_integration_version)
+
+    entities = [
+        TunnelTokenSensor(token_path, tunnels_path, name, url, version),
+        TunnelConnectedCountSensor(token_path, tunnels_path, name, url, version),
+        TunnelConnectedListSensor(token_path, tunnels_path, name, url, version),
+    ]
+    async_add_entities(entities, update_before_add=True)
